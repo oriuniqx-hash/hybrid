@@ -10,6 +10,7 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [username, setUsername] = useState('')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -25,7 +26,7 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
         email,
         password,
         options: {
-          data: { full_name: name },
+          data: { full_name: name, username: username.trim().toLowerCase() },
           emailRedirectTo: window.location.origin + '/auth/callback',
         },
       })
@@ -98,6 +99,7 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
 
         <form onSubmit={submit} className="mt-6 space-y-3">
           {mode === 'signup' && (
+            <>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -105,6 +107,16 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
               className="w-full rounded-2xl border border-bg-border bg-bg-base p-3 outline-none"
               placeholder="Your name"
             />
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+              required
+              minLength={3}
+              maxLength={24}
+              className="w-full rounded-2xl border border-bg-border bg-bg-base p-3 outline-none"
+              placeholder="Username"
+            />
+            </>
           )}
           <input
             value={email}
