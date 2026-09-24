@@ -1,1 +1,66 @@
-import {createServerClient} from '@supabase/ssr';import {NextResponse,type NextRequest} from 'next/server';export async function middleware(req:NextRequest){let res=NextResponse.next({request:{headers:req.headers}});const s=createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,{cookies:{getAll:()=>req.cookies.getAll(),setAll:v=>{v.forEach(({name,value})=>req.cookies.set(name,value));res=NextResponse.next({request:req});v.forEach(({name,value,options})=>res.cookies.set(name,value,options))}}});const {data:{user}}=await s.auth.getUser();const protectedPath=['/dashboard','/reels','/messages','/create','/analytics'].some(p=>req.nextUrl.pathname===p||req.nextUrl.pathname.startsWith(p+'/'));if(protectedPath&&!user)return NextResponse.redirect(new URL('/?auth=true',req.url));if(req.nextUrl.pathname==='/'&&user)return NextResponse.redirect(new URL('/dashboard',req.url));return res}export const config={matcher:['/','/dashboard/:path*','/reels/:path*','/messages/:path*','/create/:path*','/analytics/:path*']}
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+
+type CookieToSet = {
+  name: string
+  value: string
+  options?: Parameters<NextResponse['cookies']['set']>[2]
+}
+
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({ request })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet: CookieToSet[]) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value)
+          })
+
+          response = NextResponse.next({ request })
+
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options)
+          })
+        },
+      },
+    },
+  )
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const protectedPath = ['/dashboard', '/reels', '/messages', '/create', '/analytics'].some(
+    (path) =>
+      request.nextUrl.pathname === path ||
+      request.nextUrl.pathname.startsWith(path + '/'),
+  )
+
+  if (protectedPath && !user) {
+    return NextResponse.redirect(new URL('/?auth=true', request.url))
+  }
+
+  if (request.nextUrl.pathname === '/' && user) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  return response
+}
+
+export const config = {
+  matcher: [
+    '/',
+    '/dashboard/:path*',
+    '/reels/:path*',
+    '/messages/:path*',
+    '/create/:path*',
+    '/analytics/:path*',
+  ],
+}
