@@ -50,23 +50,7 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
     setBusy(false)
   }
 
-  async function magicLink() {
-    if (!email) {
-      setMessage('Enter your email first.')
-      return
-    }
-
-    setBusy(true)
-    setMessage('')
-    const { error } = await createSupabaseBrowserClient().auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.origin + '/auth/callback' },
-    })
-    setMessage(error?.message || 'Check your email for the sign-in link.')
-    setBusy(false)
-  }
-
-  async function oauth(provider: 'google' | 'github') {
+  async function oauth(provider: 'google') {
     setBusy(true)
     setMessage('')
     const { error } = await createSupabaseBrowserClient().auth.signInWithOAuth({
@@ -141,14 +125,10 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
             {busy ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
           </button>
         </form>
-
-        <button disabled={busy} onClick={magicLink} className="mt-3 w-full rounded-2xl border border-bg-border p-3 text-sm">
-          Email me a magic sign-in link
-        </button>
-
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <button disabled={busy} onClick={() => oauth('google')} className="rounded-2xl border border-bg-border p-3 text-sm">Continue with Google</button>
-          <button disabled={busy} onClick={() => oauth('github')} className="rounded-2xl border border-bg-border p-3 text-sm">Continue with GitHub</button>
+        <div className="mt-3">
+          <button disabled={busy} onClick={() => oauth('google')} className="w-full rounded-2xl border border-bg-border p-3 text-sm">
+            Continue with Google
+          </button>
         </div>
 
         <button
