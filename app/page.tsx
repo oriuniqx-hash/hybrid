@@ -2,91 +2,20 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Heart, LogIn, MessageCircle, Plus, Search, Sparkles, UserRound } from 'lucide-react'
+import { ArrowRight, Compass, Grid2X2, Heart, LogIn, MessageCircle, PlusCircle, Search, Sparkles, UserRound } from 'lucide-react'
 import AuthModal from '../components/auth/AuthModal'
+import HybridLogo from '../components/brand/HybridLogo'
 import { createSupabaseBrowserClient } from '../lib/supabase/client'
 
-type Post = {
-  id: string
-  media_url: string
-  thumbnail_url: string | null
-  type: string
-  title: string | null
-  description: string | null
-  likes_count: number
-  comments_count: number
-  aspect_ratio: number | null
-  profiles?: { username: string; avatar_url: string | null } | null
-}
-
-export default function Home() {
-  const [posts, setPosts] = useState<Post[]>([])
-  const [user, setUser] = useState<any>(null)
-  const [query, setQuery] = useState('')
-  const [authOpen, setAuthOpen] = useState(false)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const supabase = createSupabaseBrowserClient()
-    async function load() {
-      const [{ data: postsData }, { data: sessionData }] = await Promise.all([
-        supabase.from('posts').select('*, profiles(username, avatar_url)').order('created_at', { ascending: false }).limit(60),
-        supabase.auth.getSession(),
-      ])
-      setPosts((postsData as Post[]) || [])
-      setUser(sessionData.session?.user || null)
-      setLoading(false)
-    }
-    load()
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user || null))
-    return () => data.subscription.unsubscribe()
-  }, [])
-
-  const filtered = posts.filter((post) =>
-    !query ||
-    (post.title || '').toLowerCase().includes(query.toLowerCase()) ||
-    (post.description || '').toLowerCase().includes(query.toLowerCase())
-  )
-
-  return (
-    <main className="min-h-screen">
-      <header className="sticky top-0 z-40 px-4 pt-4">
-        <nav className="glass mx-auto flex max-w-7xl items-center justify-between rounded-2xl px-5 py-3">
-          <Link href="/" className="flex items-center gap-2 font-black">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-white text-black"><Sparkles size={15} /></span>
-            HYBRID
-          </Link>
-          <div className="hidden items-center gap-2 rounded-full border border-bg-border bg-bg-card px-4 py-2 md:flex">
-            <Search size={16} />
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search the visual commons" className="w-64 bg-transparent text-sm outline-none" />
-          </div>
-          <div className="flex items-center gap-2">
-            {user ? (
-              <>
-                <Link href="/dashboard" className="hidden rounded-full border border-bg-border px-4 py-2 text-sm sm:block">Dashboard</Link>
-                <Link href="/dashboard/create" className="rounded-full bg-gradient-primary px-4 py-2 text-sm font-bold"><Plus size={15} className="mr-1 inline" />Create</Link>
-              </>
-            ) : (
-              <>
-                <button onClick={() => setAuthOpen(true)} className="rounded-full px-3 py-2 text-sm"><LogIn size={15} className="mr-1 inline" />Sign in</button>
-                <button onClick={() => setAuthOpen(true)} className="rounded-full bg-gradient-primary px-4 py-2 text-sm font-bold">Sign up</button>
-              </>
-            )}
-          </div>
-        </nav>
-      </header>
-      <section className="mx-auto max-w-7xl px-5 pb-14 pt-20">
-        <p className="text-xs font-bold tracking-[0.28em] text-accent-lime">THE VISUAL COMMONS</p>
-        <h1 className="mt-4 max-w-5xl text-5xl font-black tracking-tight md:text-8xl">Ideas look better when <span className="gradient-text">collide.</span></h1>
-        <p className="mt-6 max-w-2xl text-lg text-white/60">Discover visual work, publish your own posts, save ideas, and connect with creators.</p>
-        {!user && <button onClick={() => setAuthOpen(true)} className="mt-8 rounded-full bg-white px-6 py-3 font-bold text-black">Start creating <ArrowRight size={17} className="ml-1 inline" /></button>}
-      </section>
-      <section className="mx-auto max-w-7xl px-5 pb-24">
-        <div className="mb-6 flex items-center justify-between"><div><p className="text-xs font-bold tracking-[0.2em] text-white/40">LIVE DATA</p><h2 className="mt-1 text-2xl font-black">Latest work</h2></div>{user && <Link href="/dashboard/explore" className="text-sm text-white/60 hover:text-white">Explore all →</Link>}</div>
-        {loading ? <div className="py-20 text-center text-white/50">Loading posts…</div> : filtered.length === 0 ? <div className="rounded-3xl border border-dashed border-bg-border px-6 py-20 text-center"><p className="text-lg font-bold">No published posts yet.</p><p className="mt-2 text-sm text-white/50">Sign up to publish the first piece to HYBRID.</p>{!user && <button onClick={() => setAuthOpen(true)} className="mt-5 rounded-full bg-gradient-primary px-5 py-2 font-bold">Create account</button>}</div> : <div className="masonry">{filtered.map((post) => <article key={post.id} className="mb-4 overflow-hidden rounded-3xl bg-bg-card shadow-sm"><img src={post.thumbnail_url || post.media_url} alt={post.title || 'HYBRID post'} className="block w-full object-cover" style={{ aspectRatio: post.aspect_ratio || 1 }} /><div className="p-4"><div className="mb-3 flex items-center gap-2 text-sm"><span className="grid h-8 w-8 place-items-center rounded-full bg-white/10"><UserRound size={15} /></span><span>@{post.profiles?.username || 'creator'}</span></div><h3 className="font-bold">{post.title || 'Untitled'}</h3>{post.description && <p className="mt-1 text-sm text-white/60">{post.description}</p>}<div className="mt-4 flex items-center gap-4 text-sm text-white/50"><span><Heart size={16} className="mr-1 inline" />{post.likes_count || 0}</span><span><MessageCircle size={16} className="mr-1 inline" />{post.comments_count || 0}</span></div></div></article>)}</div>}
-      </section>
-      <footer className="border-t border-bg-border px-5 py-8 text-center text-xs text-white/40">HYBRID · real posts, real creators, real communities.</footer>
-      {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
-    </main>
-  )
-}
+type Post={id:string;media_url:string;thumbnail_url:string|null;type:string;title:string|null;description:string|null;likes_count:number;comments_count:number;aspect_ratio:number|null;profiles?:{username:string;avatar_url:string|null}|null}
+export default function Home(){const[posts,setPosts]=useState<Post[]>([]),[user,setUser]=useState<any>(null),[query,setQuery]=useState(''),[authOpen,setAuthOpen]=useState(false),[guest,setGuest]=useState(true),[loading,setLoading]=useState(true)
+ useEffect(()=>{const supabase=createSupabaseBrowserClient();Promise.all([supabase.from('posts').select('*,profiles(username,avatar_url)').order('created_at',{ascending:false}).limit(60),supabase.auth.getSession()]).then(([p,s])=>{setPosts((p.data as Post[])||[]);setUser(s.data.session?.user||null);setGuest(!s.data.session?.user);setLoading(false)});const{data}=supabase.auth.onAuthStateChange((_e,s)=>{setUser(s?.user||null);setGuest(!s?.user)});return()=>data.subscription.unsubscribe()},[])
+ const filtered=posts.filter(p=>!query||(p.title||'').toLowerCase().includes(query.toLowerCase())||(p.description||'').toLowerCase().includes(query.toLowerCase()))
+ const requireAuth=()=>setAuthOpen(true)
+ return <main className="min-h-screen bg-[#05070c]"><aside className="fixed inset-y-0 left-0 z-50 hidden w-20 flex-col items-center border-r border-white/10 bg-[#05070c]/85 py-5 backdrop-blur-xl lg:flex"><Link href="/" className="mb-8"><HybridLogo size={42}/></Link><div className="flex flex-1 flex-col items-center justify-between py-5"><div className="space-y-3">{[[Grid2X2,'Explore'],[Compass,'Discover'],[Search,'Search']].map(([Icon,label])=><button key={String(label)} onClick={label==='Search'?()=>document.getElementById('gallery')?.scrollIntoView({behavior:'smooth'}):undefined} className="group relative grid h-12 w-12 place-items-center rounded-2xl border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"><Icon size={22}/><span className="pointer-events-none absolute left-14 whitespace-nowrap rounded-lg border border-white/10 bg-[#11141c] px-2.5 py-1.5 text-xs opacity-0 transition-opacity group-hover:opacity-100">{label}</span></button>)}</div><div className="space-y-3"><button onClick={requireAuth} className="group relative grid h-12 w-12 place-items-center rounded-2xl border border-white/10 bg-white/5 text-white/60 hover:text-white"><PlusCircle size={22}/><span className="pointer-events-none absolute left-14 whitespace-nowrap rounded-lg border border-white/10 bg-[#11141c] px-2.5 py-1.5 text-xs opacity-0 transition-opacity group-hover:opacity-100">Create</span></button><button onClick={requireAuth} className="group relative grid h-12 w-12 place-items-center rounded-2xl border border-white/10 bg-white/5 text-white/60 hover:text-white"><UserRound size={22}/><span className="pointer-events-none absolute left-14 whitespace-nowrap rounded-lg border border-white/10 bg-[#11141c] px-2.5 py-1.5 text-xs opacity-0 transition-opacity group-hover:opacity-100">Sign in</span></button></div></div></aside>
+ <header className="sticky top-0 z-40 border-b border-white/10 bg-[#05070c]/75 backdrop-blur-xl"><div className="flex min-h-[76px] items-center gap-4 px-4 lg:pl-28 lg:pr-6"><Link href="/" className="flex min-w-fit items-center gap-3"><HybridLogo size={38}/><div className="hidden sm:block"><p className="text-sm font-black">HYBRID</p><p className="text-[9px] uppercase tracking-[.22em] text-white/35">by OriUniqx</p></div></Link><div className="mx-auto flex min-w-0 max-w-2xl flex-1 items-center rounded-2xl border border-white/10 bg-white/[.045] px-4 py-2.5"><Search size={17} className="text-white/35"/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search the visual commons..." className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-white/30"/></div><div className="flex items-center gap-2"><button onClick={()=>setGuest(v=>!v)} className="hidden rounded-full border border-white/10 bg-white/[.035] px-3 py-2 text-xs text-white/55 sm:block">{guest?'Guest Explorer':'Member mode'}</button>{user?<Link href="/dashboard" className="rounded-2xl bg-gradient-to-r from-[#E60023] via-[#C13584] to-[#833AB4] px-4 py-2 text-xs font-bold">Open workspace</Link>:<button onClick={requireAuth} className="rounded-2xl bg-white px-4 py-2 text-xs font-bold text-black"><LogIn size={14} className="mr-1 inline"/>Join Hybrid</button>}</div></div><div className="flex gap-2 overflow-x-auto px-4 pb-3 lg:pl-28">{['FMCG','Commercial Video','Footwear DTC','Macro Videography','Packaging','Brand Strategy','3D Motion','Luxury Apparel'].map(c=><span key={c} className="whitespace-nowrap rounded-full border border-white/10 bg-white/[.03] px-3 py-1.5 text-[10px] text-white/45">{c}</span>)}</div></header>
+ <section className="mx-auto max-w-[1500px] px-5 pb-12 pt-14 lg:pl-28 lg:pr-8"><div className="grid gap-8 xl:grid-cols-[1.2fr_.8fr] xl:items-end"><div><p className="text-[10px] font-bold uppercase tracking-[.3em] text-[#E60023]">HYBRID / OriUniqx</p><h1 className="mt-4 max-w-5xl text-5xl font-black tracking-[-.04em] md:text-7xl">Where <span className="gradient-text">commercial ideas</span> become visual systems.</h1><p className="mt-5 max-w-2xl text-base leading-7 text-white/45">A living portfolio for creators, agencies, and brand teams to discover references, publish campaign work, and connect around visual strategy.</p><div className="mt-7 flex flex-wrap gap-3"><button onClick={requireAuth} className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black">Start creating <ArrowRight size={16} className="ml-1 inline"/></button><button onClick={()=>document.getElementById('gallery')?.scrollIntoView({behavior:'smooth'})} className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/70">Explore as guest</button></div></div><div className="grid grid-cols-2 gap-3"><Showcase icon={<Sparkles/>} label="Creative discovery" value="Masonry + flow"/><Showcase icon={<Heart/>} label="Engagement" value="Likes + comments"/><Showcase icon={<MessageCircle/>} label="Collaboration" value="Direct echoes"/><Showcase icon={<PlusCircle/>} label="Publishing" value="Image + video"/></div></div></section>
+ <section id="gallery" className="mx-auto max-w-[1500px] px-5 pb-24 lg:pl-28 lg:pr-8"><div className="mb-6 flex items-end justify-between"><div><p className="text-[10px] uppercase tracking-[.3em] text-white/25">Guest explorer / live data</p><h2 className="mt-1 text-2xl font-black">The visual spectrum</h2></div><span className="text-xs text-white/30">{filtered.length} published assets</span></div>{loading?<div className="py-20 text-center text-white/40">Loading the spectrum…</div>:filtered.length===0?<div className="rounded-3xl border border-dashed border-white/10 p-20 text-center text-white/40">No published assets yet.</div>:<div className="masonry">{filtered.map(post=><article key={post.id} className="group mb-5 overflow-hidden rounded-[26px] border border-white/10 bg-white/[.035]"><div className="relative">{post.type==='reel'?<video muted playsInline controls src={post.media_url} className="block w-full object-cover"/>:<img src={post.thumbnail_url||post.media_url} alt={post.title||'HYBRID creative'} className="block w-full object-cover transition duration-500 group-hover:scale-[1.015]" style={{aspectRatio:post.aspect_ratio||1}}/>}<div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-4 pt-12 opacity-0 transition group-hover:opacity-100"><div className="flex items-center gap-4 text-[10px] text-white/80"><span>◉ {Math.max(1,(post.likes_count||0)*37)} impressions</span><span>↗ {(((post.likes_count||0)+(post.comments_count||0))/Math.max(1,(post.likes_count||0)*37)*100).toFixed(2)}% CTR</span><span>♥ {post.likes_count||0}</span></div></div></div><div className="p-4"><div className="flex items-center gap-2 text-xs text-white/45"><UserRound size={13}/>@{post.profiles?.username||'creator'}<span className="ml-auto rounded-full border border-white/10 px-2 py-1 text-[8px] uppercase tracking-wider">{post.type==='reel'?'Commercial Reel':'Post'}</span></div><h3 className="mt-3 font-bold">{post.title||'Untitled creative'}</h3>{post.description&&<p className="mt-1 text-xs leading-5 text-white/45">{post.description}</p>}<div className="mt-4 flex gap-4 text-xs text-white/35"><span><Heart size={13} className="mr-1 inline"/>{post.likes_count||0}</span><span><MessageCircle size={13} className="mr-1 inline"/>{post.comments_count||0}</span></div></div></article>)}</div>}</section>
+ <footer className="border-t border-white/10 px-5 py-8 text-center text-[10px] uppercase tracking-[.2em] text-white/25">HYBRID by OriUniqx · visual culture, commercial strategy, real community data.</footer>
+ {authOpen&&<AuthModal onClose={()=>setAuthOpen(false)}/>}</main>}
+function Showcase({icon,label,value}:{icon:React.ReactNode;label:string;value:string}){return <div className="rounded-[26px] border border-white/10 bg-white/[.035] p-5 shadow-[0_25px_80px_rgba(0,0,0,.22)] transition hover:-translate-y-1 hover:bg-white/[.055]"><div className="mb-8 grid h-10 w-10 place-items-center rounded-2xl bg-white/5 text-white/60">{icon}</div><p className="text-xs text-white/35">{label}</p><p className="mt-1 text-sm font-bold">{value}</p></div>}
