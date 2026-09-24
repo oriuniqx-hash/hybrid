@@ -1,1 +1,5 @@
-import {createSupabaseServerClient} from '../../../lib/supabase/server';export default async function Messages(){const s=await createSupabaseServerClient();const {data}=await s.from('profiles').select('id,username,avatar_url').limit(50);return <section><h1 className="mb-6 text-4xl font-black">Messages</h1><div className="rounded-3xl border border-bg-border bg-bg-card p-6"><p className="text-white/60">Conversations are backed by the existing messages table. Select a creator to continue chatting.</p><div className="mt-5 grid gap-2">{(data||[]).map((p:any)=><div key={p.id} className="rounded-2xl bg-white/5 p-4">@{p.username||'creator'}</div>)}</div></div></section>}
+import MessageCenter from '../../../components/social/MessageCenter'
+
+export default function MessagesPage() {
+  return <section><h1 className="mb-6 text-4xl font-black">Messages</h1><MessageCenter /></section>
+}
