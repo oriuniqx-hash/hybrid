@@ -1,0 +1,2 @@
+@tailwind base;@tailwind components;@tailwind utilities;
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f7f5ef;color:#171717;font-family:Arial,Helvetica,sans-serif}.glass{background:rgba(255,255,255,.72);backdrop-filter:blur(18px);border:1px solid rgba(23,23,23,.08)}.masonry{columns:1;column-gap:18px}@media(min-width:640px){.masonry{columns:2}}@media(min-width:1024px){.masonry{columns:3}}.masonry>*{break-inside:avoid;margin-bottom:18px}
