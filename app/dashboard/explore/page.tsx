@@ -1,1 +1,8 @@
-import {createSupabaseServerClient} from '../../../lib/supabase/server';export default async function Explore(){const s=await createSupabaseServerClient();const {data}=await s.from('posts').select('*,profiles(username,avatar_url)').order('likes_count',{ascending:false}).limit(60);return <section><h1 className="mb-6 text-4xl font-black">Explore</h1><div className="columns-1 gap-4 sm:columns-2 lg:columns-4">{(data||[]).map((p:any)=><article key={p.id} className="mb-4 break-inside-avoid overflow-hidden rounded-3xl border border-bg-border bg-bg-card"><img src={p.thumbnail_url||p.media_url} alt={p.title||'post'} className="w-full"/><div className="p-4 font-semibold">{p.title||'Untitled'}</div></article>)}</div></section>}
+import { createSupabaseServerClient } from '../../../lib/supabase/server'
+import PostCard from '../../../components/social/PostCard'
+
+export default async function ExplorePage() {
+  const supabase = await createSupabaseServerClient()
+  const { data } = await supabase.from('posts').select('*,profiles(username,avatar_url)').order('likes_count', { ascending: false }).order('created_at', { ascending: false }).limit(60)
+  return <section><h1 className="mb-6 text-4xl font-black">Explore</h1><div className="columns-1 gap-4 sm:columns-2 lg:columns-4">{(data ?? []).map((post: any) => <PostCard key={post.id} post={post} />)}</div></section>
+}
