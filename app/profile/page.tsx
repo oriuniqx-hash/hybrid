@@ -1,0 +1,1 @@
+export default function ProfilePage(){return <main className="min-h-screen p-8"><h1 className="text-4xl font-black">Profile</h1><p className="mt-3 text-neutral-600">Profile data is sourced from the existing Supabase profiles table.</p></main>}
