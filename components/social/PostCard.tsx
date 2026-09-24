@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Eye, Heart, MessageCircle, Pin, Send, Tag } from 'lucide-react'
 import { createSupabaseBrowserClient } from '../../lib/supabase/client'
 
@@ -33,4 +33,4 @@ export default function PostCard({post}:{post:Post}){
   </div>
  </article>
 }
-function Metric({icon,value,label}:{icon:React.ReactNode;value:string;label:string}){return <div><div className="flex items-center gap-1">{icon}<span>{value}</span></div><p className="mt-0.5 text-[8px] uppercase tracking-wider text-white/40">{label}</p></div>}
+function Metric({icon,value,label}:{icon:ReactNode;value:string;label:string}){return <div><div className="flex items-center gap-1">{icon}<span>{value}</span></div><p className="mt-0.5 text-[8px] uppercase tracking-wider text-white/40">{label}</p></div>}
