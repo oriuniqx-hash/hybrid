@@ -1,23 +1,30 @@
-'use client'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 
-import { useMemo } from 'react'
-import part01 from '../lib/hybrid-layout/part01'
-import part02 from '../lib/hybrid-layout/part02'
-import part03 from '../lib/hybrid-layout/part03'
-import part04 from '../lib/hybrid-layout/part04'
-import part05 from '../lib/hybrid-layout/part05'
-import tailBase64 from '../lib/hybrid-layout/part06.b64'
+function readExportedString(filePath: string) {
+  const source = readFileSync(filePath, 'utf8').trim()
+  const expression = source
+    .replace(/^export default\s+/, '')
+    .replace(/\s+as string;?$/, '')
+    .trim()
+  return JSON.parse(expression) as string
+}
 
-function decodeBase64Utf8(value: string) {
-  const bytes = Uint8Array.from(atob(value), char => char.charCodeAt(0))
-  return new TextDecoder().decode(bytes)
+function readTail(filePath: string) {
+  const source = readExportedString(filePath)
+  return Buffer.from(source, 'base64').toString('utf8')
 }
 
 export default function Home() {
-  const html = useMemo(
-    () => [part01, part02, part03, part04, part05, decodeBase64Utf8(tailBase64)].join(''),
-    []
-  )
+  const base = path.join(process.cwd(), 'lib', 'hybrid-layout')
+  const html = [
+    readExportedString(path.join(base, 'part01.ts')),
+    readExportedString(path.join(base, 'part02.ts')),
+    readExportedString(path.join(base, 'part03.ts')),
+    readExportedString(path.join(base, 'part04.ts')),
+    readExportedString(path.join(base, 'part05.ts')),
+    readTail(path.join(base, 'part06.b64.ts')),
+  ].join('')
 
   return (
     <main className="fixed inset-0 overflow-hidden bg-[#05070c]">
