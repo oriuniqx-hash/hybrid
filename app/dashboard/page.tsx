@@ -1,52 +1,14 @@
-import { createSupabaseServerClient } from '../../lib/supabase/server';
+import { createSupabaseServerClient } from '../../lib/supabase/server'
+import PostCard from '../../components/social/PostCard'
 
 export default async function DashboardPage() {
-  const supabase = await createSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from('posts')
-    .select('*, profiles(username, avatar_url)')
-    .order('created_at', { ascending: false })
-    .limit(60);
-
-  if (error) {
-    console.error('Dashboard posts fetch error:', error);
-  }
-
-  const posts = data ?? [];
-
-  return (
-    <section>
-      <p className="text-xs font-bold tracking-[0.25em] text-accent-lime">
-        FOR YOU
-      </p>
-      <h1 className="mt-2 text-4xl font-black">The canvas</h1>
-
-      <div className="mt-8 columns-1 gap-4 sm:columns-2 lg:columns-4">
-        {posts.map((p: any) => (
-          <article
-            key={p.id}
-            className="mb-4 break-inside-avoid overflow-hidden rounded-3xl border border-bg-border bg-bg-card"
-          >
-            <img
-              src={p.thumbnail_url || p.media_url}
-              alt={p.title || 'HYBRID post'}
-              className="w-full object-cover"
-              style={{ aspectRatio: p.aspect_ratio || 1 }}
-            />
-            <div className="p-4">
-              <p className="font-bold">{p.title || 'Untitled'}</p>
-              <p className="mt-1 text-sm text-white/50">
-                @{p.profiles?.username || 'creator'}
-              </p>
-              <p className="mt-3 text-sm text-white/70">{p.description}</p>
-              <div className="mt-3 text-xs text-white/40">
-                {p.likes_count || 0} likes · {p.comments_count || 0} comments
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
+  const supabase = await createSupabaseServerClient()
+  const { data, error } = await supabase.from('posts').select('*, profiles(username, avatar_url)').order('created_at', { ascending: false }).limit(60)
+  if (error) console.error('Dashboard posts fetch error:', error)
+  return <section>
+    <p className="text-xs font-bold tracking-[0.25em] text-accent-lime">FOR YOU</p>
+    <h1 className="mt-2 text-4xl font-black">The canvas</h1>
+    <div className="mt-8 columns-1 gap-4 sm:columns-2 lg:columns-4">{(data ?? []).map((post: any) => <PostCard key={post.id} post={post} />)}</div>
+    {!data?.length && <div className="mt-8 rounded-3xl border border-bg-border bg-bg-card p-10 text-center text-white/50">No posts yet. Create the first one.</div>}
+  </section>
 }
