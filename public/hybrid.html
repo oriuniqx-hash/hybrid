@@ -862,7 +862,7 @@
     ];
 
     let currentView = 'landing';
-    let isLoggedIn = false;
+    let isLoggedIn = false;\n    let hybridUser = null;\n\n    async function loadHybridSession() {\n      try {\n        const response = await fetch('/api/auth/session', { credentials: 'same-origin', cache: 'no-store' });\n        const data = await response.json();\n        isLoggedIn = Boolean(data.authenticated);\n        hybridUser = data.user || null;\n        if (isLoggedIn && new URLSearchParams(location.search).get('auth') === 'true') history.replaceState({}, '', '/');\n        if (isLoggedIn) switchView('feed');\n      } catch (e) { console.error('HYBRID session check failed', e); }\n    }\n\n    async function handleAuth(event) {\n      event.preventDefault();\n      const form = event.target;\n      const inputs = form.querySelectorAll('input');\n      const email = inputs[0]?.value?.trim();\n      const password = inputs[1]?.value || '';\n      const button = form.querySelector('button[type="submit"]');\n      if (button) { button.disabled = true; button.textContent = 'Connecting…'; }\n      try {\n        const response = await fetch('/api/auth', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body:JSON.stringify({email,password}) });\n        const data = await response.json();\n        if (!response.ok) throw new Error(data.error || 'Authentication failed');\n        if (data.confirmationRequired) { alert('Account created. Check your email to confirm your account, then sign in.'); return; }\n        isLoggedIn = true; hybridUser = data.user; closeModal('authModal'); closeModal('guestPromptModal'); switchView('feed');\n      } catch (error) { alert(error.message || 'Authentication failed'); }\n      finally { if (button) { button.disabled = false; button.textContent = 'Sign In / Register Agency'; } }\n    }\n\n    async function handleLogout() {\n      await fetch('/api/auth', { method:'DELETE', credentials:'same-origin' });\n      isLoggedIn = false; hybridUser = null; switchView('landing');\n    }
 
     // View Switcher: Ensures Sidebar Navigation is Visible in Explorer & All App Views
     function switchView(viewName) {
@@ -933,7 +933,7 @@
 
     function handleCreateClick() {
       handleGuestRestrictedAction(() => {
-        alert("Studio Upload Canvas Activated: Drag & drop your high-speed video spec or macro lighting PSD file.");
+        window.location.href = '/dashboard/create';
       });
     }
 
