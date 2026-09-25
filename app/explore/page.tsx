@@ -1,1 +1,4 @@
-export default function ExplorePage(){return <main className="min-h-screen p-8"><h1 className="text-4xl font-black">Explore</h1><p className="mt-3 text-neutral-600">Explore real HYBRID posts from the connected Supabase dataset.</p></main>}
+import { redirect } from 'next/navigation'
+export default function ExplorePage() {
+  redirect('/dashboard/explore')
+}

@@ -1,1 +1,4 @@
-export default function NotificationsPage(){return <main className="min-h-screen p-8"><h1 className="text-4xl font-black">Notifications</h1><p className="mt-3 text-neutral-600">Notifications are reserved for persisted application events.</p></main>}
+import { redirect } from 'next/navigation'
+export default function NotificationsPage() {
+  redirect('/dashboard')
+}

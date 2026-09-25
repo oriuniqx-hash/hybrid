@@ -1,1 +1,4 @@
-export default function MessagesPage(){return <main className="min-h-screen p-8"><h1 className="text-4xl font-black">Messages</h1><p className="mt-3 text-neutral-600">Messages use the existing Supabase messages table and its RLS policies.</p></main>}
+import { redirect } from 'next/navigation'
+export default function MessagesPage() {
+  redirect('/dashboard/messages')
+}

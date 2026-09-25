@@ -18,6 +18,7 @@ type Post = {
   description: string | null
   likes_count: number
   comments_count: number
+  tags: string[] | null
   profiles?: { username: string | null; avatar_url: string | null } | null
 }
 
@@ -78,7 +79,8 @@ export default function Home() {
   const visiblePosts = posts.filter(post => {
     const text = [post.title, post.description, post.profiles?.username, post.type].filter(Boolean).join(' ').toLowerCase()
     const matchesQuery = !query.trim() || text.includes(query.toLowerCase())
-    const matchesCategory = category === 'all' || text.includes(category)
+    const tags = (post.tags ?? []).map(t => t.toLowerCase())
+    const matchesCategory = category === 'all' || tags.includes(category) || text.includes(category)
     const matchesView = view === 'reels' ? post.type === 'reel' : true
     return matchesQuery && matchesCategory && matchesView
   })

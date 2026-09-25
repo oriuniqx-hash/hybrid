@@ -1,1 +1,4 @@
-export default function ReelsPage(){return <main className="min-h-screen p-8"><h1 className="text-4xl font-black">Reels</h1><p className="mt-3 text-neutral-600">Reels will surface posts whose real data type is configured for video.</p></main>}
+import { redirect } from 'next/navigation'
+export default function ReelsPage() {
+  redirect('/dashboard/reels')
+}
