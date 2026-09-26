@@ -6,7 +6,7 @@ import { ArrowLeft, Eye, Mic, MicOff, Radio, SwitchCamera, Video, VideoOff, Hear
 import { sb } from '../../../../lib/supabase/client'
 import { useMe } from '../../../../lib/useMe'
 import { uploadMedia } from '../../../../lib/media'
-import { liveChannel, Peer, pickRecorderMime } from '../../../../lib/live'
+import { getIce, liveChannel, Peer, pickRecorderMime } from '../../../../lib/live'
 import { toast } from '../../../../components/ui'
 import LiveChat from '../../../../components/live/LiveChat'
 import Hearts, { type HeartsHandle } from '../../../../components/live/Hearts'
@@ -69,7 +69,8 @@ export default function GoLivePage() {
   async function offerTo(viewerId: string) {
     const stream = streamRef.current; const ch = chRef.current; if (!stream || !ch) return
     peers.current.get(viewerId)?.close()
-    const peer = new Peer(); peers.current.set(viewerId, peer)
+    const { servers } = await getIce()
+    const peer = new Peer(servers); peers.current.set(viewerId, peer)
     stream.getTracks().forEach(t => peer.pc.addTrack(t, stream))
     peer.pc.onicecandidate = e => { if (e.candidate) ch.send({ type: 'broadcast', event: 'ice', payload: { to: viewerId, from: 'host', c: e.candidate.toJSON() } }) }
     peer.pc.onconnectionstatechange = () => { if (['failed', 'closed'].includes(peer.pc.connectionState)) { peer.close(); peers.current.delete(viewerId) } }
@@ -98,6 +99,7 @@ export default function GoLivePage() {
   async function goLive() {
     if (!streamRef.current) return toast('Your camera is not ready yet')
     setPhase('starting')
+    getIce() // warm the relay credentials before the first viewer joins
     const { data: row, error } = await sb().from('live_streams').insert({ host_id: me.id, title: title.trim() || null }).select('id').single()
     if (error || !row) { toast(error?.message || 'Could not go live'); setPhase('setup'); return }
     const ch = await liveChannel(row.id, me.id)

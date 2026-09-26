@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Eye, Heart, Radio, Volume2, VolumeX, Flag } from 'lucide-react'
 import { sb } from '../../../../lib/supabase/client'
 import { useMe } from '../../../../lib/useMe'
-import { freshSince, liveChannel, Peer } from '../../../../lib/live'
+import { freshSince, getIce, liveChannel, Peer, routeType } from '../../../../lib/live'
 import { Avatar, Spinner } from '../../../../components/ui'
 import { displayName } from '../../../../lib/format'
 import FollowButton from '../../../../components/social/FollowButton'
@@ -29,6 +29,7 @@ export default function WatchLivePage() {
 
   useEffect(() => {
     let alive = true, retry: any
+    const early: RTCIceCandidateInit[] = []
     ;(async () => {
       const { data } = await sb().from('live_streams').select('*, host:profiles!live_streams_host_id_fkey(id,username,full_name,avatar_url)').eq('id', id).maybeSingle()
       if (!alive) return
@@ -36,24 +37,27 @@ export default function WatchLivePage() {
       if (!data) return setState('unavailable')
       if (data.status !== 'live' || data.heartbeat_at < freshSince()) return setState('ended')
       if (data.host_id === me.id) return
+      getIce()
       const ch = await liveChannel(id, me.id); chRef.current = ch
       const hello = () => ch.send({ type: 'broadcast', event: 'hello', payload: { from: me.id } })
       ch.on('broadcast', { event: 'offer' }, async ({ payload }: any) => {
         if (payload.to !== me.id) return
-        peerRef.current?.close()
-        const peer = new Peer(); peerRef.current = peer
+        peerRef.current?.close(); peerRef.current = null
+        const { servers } = await getIce()
+        const peer = new Peer(servers); peerRef.current = peer
+        early.splice(0).forEach(c => peer.addIce(c))
         peer.pc.ontrack = e => { if (videoRef.current && videoRef.current.srcObject !== e.streams[0]) { videoRef.current.srcObject = e.streams[0]; videoRef.current.play().catch(() => {}) } }
         peer.pc.onicecandidate = e => { if (e.candidate) ch.send({ type: 'broadcast', event: 'ice', payload: { to: 'host', from: me.id, c: e.candidate.toJSON() } }) }
         peer.pc.onconnectionstatechange = () => {
           const s = peer.pc.connectionState
-          if (s === 'connected') setState('playing')
+          if (s === 'connected') { setState('playing'); routeType(peer.pc).then(t => { if (videoRef.current && t) videoRef.current.dataset.route = t }) }
           if (s === 'failed' || s === 'disconnected') { setState('connecting'); setTimeout(hello, 1500) }
         }
         await peer.setRemote(payload.sdp)
         const ans = await peer.pc.createAnswer(); await peer.pc.setLocalDescription(ans)
         ch.send({ type: 'broadcast', event: 'answer', payload: { from: me.id, to: 'host', sdp: peer.pc.localDescription } })
       })
-        .on('broadcast', { event: 'ice' }, ({ payload }: any) => { if (payload.to === me.id) peerRef.current?.addIce(payload.c) })
+        .on('broadcast', { event: 'ice' }, ({ payload }: any) => { if (payload.to !== me.id) return; if (peerRef.current) peerRef.current.addIce(payload.c); else early.push(payload.c) })
         .on('broadcast', { event: 'host-ready' }, hello)
         .on('broadcast', { event: 'heart' }, () => hearts.current?.burst())
         .on('broadcast', { event: 'end' }, () => { setState('ended'); peerRef.current?.close() })
