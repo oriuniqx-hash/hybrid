@@ -16,3 +16,6 @@ button,input,textarea{font:inherit}
 .gradient-text{background:linear-gradient(135deg,#E60023,#C13584,#833AB4);-webkit-background-clip:text;background-clip:text;color:transparent}
 .masonry{columns:1;column-gap:20px}.masonry>*{break-inside:avoid;margin-bottom:20px}
 @media(min-width:640px){.masonry{columns:2}}@media(min-width:1024px){.masonry{columns:3}}@media(min-width:1440px){.masonry{columns:4}}
+.glass-card{background:rgba(13,17,26,.75);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.08)}
+.brand-gradient-bg{background:linear-gradient(135deg,#f43f5e 0%,#8b5cf6 50%,#06b6d4 100%)}
+.brand-gradient-text{background:linear-gradient(135deg,#f43f5e 0%,#8b5cf6 50%,#06b6d4 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
