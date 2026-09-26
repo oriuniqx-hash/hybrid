@@ -7,6 +7,7 @@ export type Profile = {
   website: string | null
   account_type: 'personal' | 'business' | 'creator'
   is_private: boolean
+  show_activity?: boolean
   role: 'user' | 'admin'
   note: string | null
   note_at: string | null

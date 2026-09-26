@@ -1,0 +1,2 @@
+-- Applied via Supabase migration "activity_status": profiles.show_activity, private user_activity table,
+-- touch_activity() heartbeat and activity_status(ids) (connected users only, both sides opted in, not blocked).

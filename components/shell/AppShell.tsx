@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { ReactNode, useEffect, useState } from 'react'
+import { useHeartbeat } from '../../lib/activity'
 import { Home, Compass, Clapperboard, PlusSquare, MessageCircle, Bell, ShoppingBag, BarChart3, Shield, Settings, Search, Camera, Moon, Sun, LogOut, Radio } from 'lucide-react'
 import HybridLogo from '../brand/HybridLogo'
 import { Avatar } from '../ui'
@@ -19,6 +20,7 @@ export default function AppShell({ me, children }: { me: Profile; children: Reac
   const [dark, setDark] = useState(false)
   const [menu, setMenu] = useState(false)
 
+  useHeartbeat()
   useEffect(() => { setDark(document.documentElement.classList.contains('dark')) }, [])
   useEffect(() => { setQ(params.get('q') || '') }, [params])
 

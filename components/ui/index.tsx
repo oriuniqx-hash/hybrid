@@ -3,15 +3,16 @@ import { ReactNode, useEffect } from 'react'
 import Link from 'next/link'
 import { X } from 'lucide-react'
 
-export function Avatar({ src, name, size = 40, ring = false }: { src?: string | null; name?: string | null; size?: number; ring?: boolean }) {
+export function Avatar({ src, name, size = 40, ring = false, online = false }: { src?: string | null; name?: string | null; size?: number; ring?: boolean; online?: boolean }) {
   const initials = (name || '?').split(/[\s_]+/).map(s => s[0]).join('').slice(0, 2).toUpperCase()
   const inner = src
     ? <img src={src} alt="" width={size} height={size} className="h-full w-full rounded-full object-cover" referrerPolicy="no-referrer" />
     : <span className="grid h-full w-full place-items-center rounded-full bg-surface2 font-bold text-muted" style={{ fontSize: size * 0.36 }}>{initials}</span>
-  if (!ring) return <span className="inline-block shrink-0" style={{ width: size, height: size }}>{inner}</span>
+  const dot = online ? <span className="absolute bottom-0 right-0 rounded-full border-bg bg-ok" style={{ width: Math.max(10, size * 0.28), height: Math.max(10, size * 0.28), borderWidth: Math.max(2, size * 0.05) }} aria-label="Active now" role="img" /> : null
+  if (!ring) return <span className="relative inline-block shrink-0" style={{ width: size, height: size }}>{inner}{dot}</span>
   return (
-    <span className="story-ring inline-block shrink-0 rounded-full p-[2.5px]" style={{ width: size + 6, height: size + 6 }}>
-      <span className="block h-full w-full rounded-full bg-bg p-[2px]">{inner}</span>
+    <span className="story-ring relative inline-block shrink-0 rounded-full p-[2.5px]" style={{ width: size + 6, height: size + 6 }}>
+      <span className="block h-full w-full rounded-full bg-bg p-[2px]">{inner}</span>{dot}
     </span>
   )
 }

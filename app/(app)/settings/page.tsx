@@ -11,7 +11,7 @@ import { Avatar, toast } from '../../../components/ui'
 export default function SettingsPage() {
   const me = useMe()
   const [tab, setTab] = useState<'profile' | 'account' | 'privacy' | 'interests'>('profile')
-  const [f, setF] = useState({ full_name: me.full_name || '', username: me.username, bio: me.bio || '', website: me.website || '', avatar_url: me.avatar_url, account_type: me.account_type, is_private: me.is_private })
+  const [f, setF] = useState({ full_name: me.full_name || '', username: me.username, bio: me.bio || '', website: me.website || '', avatar_url: me.avatar_url, account_type: me.account_type, is_private: me.is_private, show_activity: me.show_activity ?? true })
   const [interests, setInterests] = useState<string[]>(me.interests || [])
   const [busy, setBusy] = useState(false)
   const [pw, setPw] = useState('')
@@ -76,6 +76,8 @@ export default function SettingsPage() {
         <section className="mt-6 space-y-8">
           <label className="flex items-start justify-between gap-6"><span><span className="block font-semibold">Private account</span><span className="text-sm text-muted">Only approved followers can see your pins, Reels, boards and stories.</span></span>
             <input type="checkbox" checked={f.is_private} onChange={e => { setF({ ...f, is_private: e.target.checked }); }} className="mt-1 h-5 w-5 accent-[rgb(var(--accent))]" /></label>
+          <label className="flex items-start justify-between gap-6"><span><span className="block font-semibold">Show activity status</span><span className="text-sm text-muted">People you follow and anyone you message can see when you're active or were recently active. When this is off, you won't see their activity status either.</span></span>
+            <input type="checkbox" checked={f.show_activity} onChange={e => setF({ ...f, show_activity: e.target.checked })} className="mt-1 h-5 w-5 accent-[rgb(var(--accent))]" /></label>
           <button disabled={busy} onClick={() => save()} className="btn-primary">Save privacy</button>
           <div><h2 className="font-semibold">Close friends</h2><p className="text-sm text-muted">Share stories with just these people.</p>
             <input className="input mt-3" placeholder="Add by username" value={q} onChange={e => setQ(e.target.value)} />

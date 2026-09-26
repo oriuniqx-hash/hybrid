@@ -8,6 +8,7 @@ import { useMe } from '../../../lib/useMe'
 import { Avatar, Empty, Modal, Spinner, toast } from '../../../components/ui'
 import { displayName, timeAgo } from '../../../lib/format'
 import { uploadMedia } from '../../../lib/media'
+import { activityLabel, isActive, useActivity } from '../../../lib/activity'
 
 type Conv = { key: string; kind: 'dm' | 'group'; id: string; title: string; avatar: string | null; last: string; at: string; unread: number; username?: string }
 
@@ -61,6 +62,7 @@ export default function MessagesPage() {
 
   const active = to ? { kind: 'dm' as const, id: to } : group ? { kind: 'group' as const, id: group } : null
   const myNote = notes.find(n => n.id === me.id)
+  const seen = useActivity([...(convs || []).filter(c => c.kind === 'dm').map(c => c.id), ...notes.map(n => n.id)])
 
   return (
     <div className="mx-auto flex h-[calc(100dvh-4rem-4rem)] max-w-6xl lg:h-[calc(100dvh-4rem)]">
@@ -73,7 +75,7 @@ export default function MessagesPage() {
           </button>
           {notes.filter(n => n.id !== me.id).map(n => (
             <Link key={n.id} href={`/messages?to=${n.id}`} className="flex w-16 shrink-0 flex-col items-center gap-1">
-              <span className="relative"><Avatar src={n.avatar_url} name={n.username} size={56} /><span className="absolute -top-2 left-1/2 max-w-[80px] -translate-x-1/2 truncate rounded-xl bg-surface px-2 py-1 text-[10px] shadow-card">{n.note}</span></span>
+              <span className="relative"><Avatar src={n.avatar_url} name={n.username} size={56} online={isActive(seen[n.id])} /><span className="absolute -top-2 left-1/2 max-w-[80px] -translate-x-1/2 truncate rounded-xl bg-surface px-2 py-1 text-[10px] shadow-card">{n.note}</span></span>
               <span className="w-full truncate text-center text-[11px]">{n.username}</span>
             </Link>
           ))}
@@ -82,8 +84,8 @@ export default function MessagesPage() {
           {!convs ? <div className="grid place-items-center py-10"><Spinner /></div> : convs.length === 0 ? <Empty icon={<MessageCircle size={24} />} title="No messages yet" body="Message someone from their profile, or share a pin with them." /> :
             convs.map(c => (
               <Link key={c.key} href={c.kind === 'dm' ? `/messages?to=${c.id}` : `/messages?group=${c.id}`} className={`flex items-center gap-3 px-4 py-3 hover:bg-surface2 ${active?.id === c.id ? 'bg-surface2' : ''}`}>
-                {c.kind === 'group' ? <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-surface2"><Users size={20} /></span> : <Avatar src={c.avatar} name={c.title} size={48} />}
-                <span className="min-w-0 flex-1"><span className={`block truncate text-sm ${c.unread ? 'font-bold' : 'font-semibold'}`}>{c.title}</span><span className={`block truncate text-xs ${c.unread ? 'text-ink' : 'text-muted'}`}>{c.last} · {timeAgo(c.at)}</span></span>
+                {c.kind === 'group' ? <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-surface2"><Users size={20} /></span> : <Avatar src={c.avatar} name={c.title} size={48} online={isActive(seen[c.id])} />}
+                <span className="min-w-0 flex-1"><span className={`block truncate text-sm ${c.unread ? 'font-bold' : 'font-semibold'}`}>{c.title}</span><span className={`block truncate text-xs ${c.unread ? 'text-ink' : 'text-muted'}`}>{!c.unread && c.kind === 'dm' && activityLabel(seen[c.id]) ? <span data-activity>{activityLabel(seen[c.id])}</span> : <>{c.last} · {timeAgo(c.at)}</>}</span></span>
                 {c.unread > 0 && <span className="h-2.5 w-2.5 rounded-full bg-accent" />}
               </Link>
             ))}
@@ -106,6 +108,8 @@ function Chat({ kind, id, onBack, onSent }: { kind: 'dm' | 'group'; id: string; 
   const [text, setText] = useState('')
   const [members, setMembers] = useState<Record<string, any>>({})
   const end = useRef<HTMLDivElement>(null)
+  const seen = useActivity(kind === 'dm' ? [id] : Object.keys(members).filter(u => u !== me.id))
+  const activeCount = Object.values(seen).filter(isActive).length
   const sel = 'id,sender_id,receiver_id,content,created_at,read_at,post:posts(id,media_url,thumbnail_url,title,type)'
 
   async function load() {
@@ -152,8 +156,8 @@ function Chat({ kind, id, onBack, onSent }: { kind: 'dm' | 'group'; id: string; 
     <>
       <header className="flex items-center gap-3 border-b border-line p-3">
         <button onClick={onBack} className="icon-btn md:hidden" aria-label="Back"><ArrowLeft size={20} /></button>
-        {kind === 'dm' ? peer && <Link href={`/u/${peer.username}`} className="flex items-center gap-3"><Avatar src={peer.avatar_url} name={displayName(peer)} size={40} /><span><span className="block font-semibold">{displayName(peer)}</span><span className="text-xs text-muted">@{peer.username}</span></span></Link>
-          : peer && <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-full bg-surface2"><Users size={18} /></span><span><span className="block font-semibold">{peer.name}</span><span className="text-xs text-muted">{Object.keys(members).length} members</span></span></div>}
+        {kind === 'dm' ? peer && <Link href={`/u/${peer.username}`} className="flex items-center gap-3"><Avatar src={peer.avatar_url} name={displayName(peer)} size={40} online={isActive(seen[id])} /><span><span className="block font-semibold">{displayName(peer)}</span><span className="text-xs text-muted" data-activity-header>{activityLabel(seen[id]) || '@' + peer.username}</span></span></Link>
+          : peer && <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-full bg-surface2"><Users size={18} /></span><span><span className="block font-semibold">{peer.name}</span><span className="text-xs text-muted">{Object.keys(members).length} members{activeCount > 0 && <> · <span className="text-ok">{activeCount} active now</span></>}</span></span></div>}
       </header>
       <div className="flex-1 space-y-2 overflow-auto p-4">
         {!msgs ? <Spinner /> : msgs.length === 0 && <p className="py-10 text-center text-sm text-muted">Say hi 👋</p>}
