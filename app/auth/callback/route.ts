@@ -11,9 +11,15 @@ type CookieToSet = {
 export async function GET(req: Request) {
   const url = new URL(req.url)
   const code = url.searchParams.get('code')
+  const nextParam = url.searchParams.get('next') || '/dashboard'
+  const next = nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/dashboard'
+  const providerError = url.searchParams.get('error_description') || url.searchParams.get('error')
 
   if (!code) {
-    return NextResponse.redirect(new URL('/?auth=true', url.origin))
+    const target = new URL('/', url.origin)
+    target.searchParams.set('auth', 'true')
+    if (providerError) target.searchParams.set('error', providerError)
+    return NextResponse.redirect(target)
   }
 
   const cookieStore = await cookies()
@@ -39,7 +45,10 @@ export async function GET(req: Request) {
 
   if (error) {
     console.error('Auth callback error:', error)
-    return NextResponse.redirect(new URL('/?auth=true&error=auth_callback', url.origin))
+    const target = new URL('/', url.origin)
+    target.searchParams.set('auth', 'true')
+    target.searchParams.set('error', 'Sign-in link expired or was opened in a different browser. Please sign in again.')
+    return NextResponse.redirect(target)
   }
 
   const user = sessionData.session?.user
@@ -55,5 +64,5 @@ export async function GET(req: Request) {
     }, { onConflict: 'id' })
   }
 
-  return NextResponse.redirect(new URL('/dashboard', url.origin))
+  return NextResponse.redirect(new URL(next, url.origin))
 }

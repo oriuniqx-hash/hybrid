@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import { createSupabaseBrowserClient } from '../../lib/supabase/client'
 
 type Mode = 'signin' | 'signup'
@@ -13,6 +13,13 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
   const [username, setUsername] = useState('')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const err = params.get('error')
+    if (err) setMessage(err)
+    if (params.get('mode') === 'signup') setMode('signup')
+  }, [])
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -35,6 +42,9 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
         setMessage(error.message)
       } else if (data.session) {
         window.location.href = '/dashboard'
+      } else if (data.user && data.user.identities && data.user.identities.length === 0) {
+        setMessage('An account with this email already exists. Please sign in instead.')
+        setMode('signin')
       } else {
         setMessage('Account created. Check your email to confirm your account, then sign in.')
       }
