@@ -1,1 +1,0 @@
-export default function AnalyticsPage(){return <main className="min-h-screen p-8"><h1 className="text-4xl font-black">Analytics</h1><p className="mt-3 text-neutral-600">Analytics will be derived only from persisted HYBRID data.</p></main>}

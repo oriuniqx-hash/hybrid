@@ -1,2 +1,0 @@
-import MessageCenter from '../../../components/social/MessageCenter'
-export default function MessagesPage(){return <section className="mx-auto max-w-[1300px]"><div className="mb-6"><p className="text-[10px] font-bold uppercase tracking-[.3em] text-[#C13584]">Echoes / Direct</p><h1 className="mt-2 text-4xl font-black">Creative conversations.</h1></div><MessageCenter/></section>}

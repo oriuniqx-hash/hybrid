@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 type CookieToSet = { name: string; value: string; options?: Parameters<NextResponse['cookies']['set']>[2] }
 
-const PROTECTED = ['/dashboard', '/reels', '/messages', '/create', '/analytics']
+const PROTECTED = ['/home', '/explore', '/reels', '/create', '/shop', '/messages', '/notifications', '/studio', '/settings', '/admin', '/p', '/u', '/boards', '/stories', '/highlights', '/onboarding', '/dashboard']
 
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl
@@ -15,7 +15,7 @@ export async function middleware(request: NextRequest) {
   if (code && pathname !== '/auth/callback') {
     const target = new URL('/auth/callback', request.url)
     target.searchParams.set('code', code)
-    target.searchParams.set('next', searchParams.get('next') || '/dashboard')
+    target.searchParams.set('next', searchParams.get('next') || '/home')
     return NextResponse.redirect(target)
   }
   // Supabase auth errors (e.g. expired link) also arrive on the Site URL.

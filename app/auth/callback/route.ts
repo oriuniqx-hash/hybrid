@@ -11,8 +11,8 @@ type CookieToSet = {
 export async function GET(req: Request) {
   const url = new URL(req.url)
   const code = url.searchParams.get('code')
-  const nextParam = url.searchParams.get('next') || '/dashboard'
-  const next = nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/dashboard'
+  const nextParam = url.searchParams.get('next') || '/home'
+  const next = nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/home'
   const providerError = url.searchParams.get('error_description') || url.searchParams.get('error')
 
   if (!code) {
@@ -53,15 +53,17 @@ export async function GET(req: Request) {
 
   const user = sessionData.session?.user
   if (user) {
-    const metadataUsername = typeof user.user_metadata?.username === 'string' ? user.user_metadata.username : ''
-    const fallbackUsername = metadataUsername || (user.email?.split('@')[0] || 'user') + '_' + user.id.slice(0, 6)
-    await supabase.from('profiles').upsert({
-      id: user.id,
-      username: fallbackUsername.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 24),
-      full_name: typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : null,
-      avatar_url: typeof user.user_metadata?.avatar_url === 'string' ? user.user_metadata.avatar_url : null,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'id' })
+    // Profile is created by the auth trigger; only fill it in if it is somehow missing.
+    const { data: existing } = await supabase.from('profiles').select('id').eq('id', user.id).maybeSingle()
+    if (!existing) {
+      const base = (typeof user.user_metadata?.username === 'string' ? user.user_metadata.username : user.email?.split('@')[0] || 'user').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 16)
+      await supabase.from('profiles').insert({
+        id: user.id,
+        username: base + '_' + user.id.slice(0, 6),
+        full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+        avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+      })
+    }
   }
 
   return NextResponse.redirect(new URL(next, url.origin))
