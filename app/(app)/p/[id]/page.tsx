@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
-import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink, MoreHorizontal, Share, ShoppingBag, MapPin, Eye, Bookmark, Flag, Trash2, Link2, Search } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink, MoreHorizontal, Share, ShoppingBag, MapPin, Eye, Bookmark, Flag, Trash2, Link2, Search, Shuffle, Layers } from 'lucide-react'
 import { sb } from '../../../../lib/supabase/client'
 import { useMe } from '../../../../lib/useMe'
 import { POST_SELECT, type Post } from '../../../../lib/types'
@@ -30,6 +30,7 @@ export default function PinPage() {
   const [share, setShare] = useState(false)
   const [report, setReport] = useState(false)
   const [menu, setMenu] = useState(false)
+  const [collage, setCollage] = useState<{ sources: any[]; remixOf: any | null; remixes: number } | null>(null)
 
   useEffect(() => {
     (async () => {
@@ -45,6 +46,13 @@ export default function PinPage() {
       ])
       setMedia(m && m.length ? m : [{ url: data.media_url, media_type: data.media_type }])
       setProducts(pr || []); setFollowers(count || 0)
+      if (data.is_collage) {
+        const { data: c } = await s.from('collages').select('source_post_ids, remixed_from').eq('post_id', id).maybeSingle()
+        const ids = [...(c?.source_post_ids || []), ...(c?.remixed_from ? [c.remixed_from] : [])]
+        const { data: src } = ids.length ? await s.from('posts').select('id,media_url,title,author:profiles!posts_user_id_fkey(username)').in('id', ids) : { data: [] as any[] }
+        const { count: rc } = await s.from('collages').select('post_id', { count: 'exact', head: true }).eq('remixed_from', id)
+        setCollage({ sources: (src || []).filter((x: any) => x.id !== c?.remixed_from), remixOf: (src || []).find((x: any) => x.id === c?.remixed_from) || null, remixes: rc || 0 })
+      } else setCollage(null)
     })()
   }, [id])
 
@@ -100,7 +108,9 @@ export default function PinPage() {
                 </div>
               )}
             </div>
-            <button onClick={() => setSave(true)} className="btn-primary ml-auto px-5 py-3">Save</button>
+            {post.is_collage ? <Link href={`/create/collage?remix=${post.id}`} className="btn-ghost ml-auto py-3"><Shuffle size={16} />Remix</Link>
+              : post.media_type === 'image' && post.type === 'pin' && <Link href={`/create/collage?add=${post.id}`} className="btn-ghost ml-auto hidden py-3 sm:inline-flex" title="Use in a collage"><Layers size={16} />Collage</Link>}
+            <button onClick={() => setSave(true)} className={`btn-primary px-5 py-3 ${post.is_collage || (post.media_type === 'image' && post.type === 'pin') ? 'sm:ml-0 ml-auto' : 'ml-auto'}`}>Save</button>
           </div>
 
           {post.source_url && <a href={post.source_url} target="_blank" rel="noopener noreferrer nofollow" className="mt-4 flex w-fit items-center gap-1.5 truncate text-sm font-semibold underline-offset-2 hover:underline"><ExternalLink size={14} />{new URL(post.source_url).hostname.replace('www.', '')}</a>}
@@ -114,6 +124,14 @@ export default function PinPage() {
             <span className="flex items-center gap-1"><Bookmark size={12} />{compact(post.saves_count)} saves</span>
           </div>
           {!!post.tags?.length && <div className="mt-3 flex flex-wrap gap-1.5">{post.tags.slice(0, 10).map(t => <Link key={t} href={`/explore?q=%23${t}`} className="chip text-xs">#{t}</Link>)}</div>}
+
+          {collage && (
+            <section className="mt-5 rounded-2xl bg-surface2 p-4">
+              <h2 className="flex items-center gap-2 text-sm font-bold"><Layers size={16} />Collage{collage.remixes > 0 && <span className="font-normal text-muted">· {collage.remixes} remix{collage.remixes === 1 ? '' : 'es'}</span>}</h2>
+              {collage.remixOf && <p className="mt-2 text-sm">Remixed from <Link href={`/p/${collage.remixOf.id}`} className="font-semibold hover:underline">{collage.remixOf.title || 'a collage'}</Link> by @{collage.remixOf.author?.username}</p>}
+              {collage.sources.length > 0 && <><p className="mt-2 text-xs text-muted">Made with these pins</p><div className="mt-2 flex gap-2 overflow-x-auto">{collage.sources.map(sp => <Link key={sp.id} href={`/p/${sp.id}`} title={sp.title || ''} className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-surface"><img src={sp.media_url} alt={sp.title || ''} className="h-full w-full object-cover" /></Link>)}</div></>}
+            </section>
+          )}
 
           {products.length > 0 && (
             <section className="mt-5 rounded-2xl bg-surface2 p-4">

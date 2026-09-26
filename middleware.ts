@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 type CookieToSet = { name: string; value: string; options?: Parameters<NextResponse['cookies']['set']>[2] }
 
-const PROTECTED = ['/home', '/explore', '/reels', '/create', '/shop', '/messages', '/notifications', '/studio', '/settings', '/admin', '/p', '/u', '/boards', '/stories', '/highlights', '/onboarding', '/dashboard']
+const PROTECTED = ['/home', '/explore', '/reels', '/create', '/shop', '/messages', '/notifications', '/studio', '/settings', '/admin', '/p', '/u', '/boards', '/stories', '/highlights', '/live', '/onboarding', '/dashboard']
 
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl

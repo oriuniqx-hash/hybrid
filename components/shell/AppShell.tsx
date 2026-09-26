@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { ReactNode, useEffect, useState } from 'react'
-import { Home, Compass, Clapperboard, PlusSquare, MessageCircle, Bell, ShoppingBag, BarChart3, Shield, Settings, Search, Camera, Moon, Sun, LogOut } from 'lucide-react'
+import { Home, Compass, Clapperboard, PlusSquare, MessageCircle, Bell, ShoppingBag, BarChart3, Shield, Settings, Search, Camera, Moon, Sun, LogOut, Radio } from 'lucide-react'
 import HybridLogo from '../brand/HybridLogo'
 import { Avatar } from '../ui'
 import { MeContext } from '../../lib/useMe'
@@ -52,6 +52,7 @@ export default function AppShell({ me, children }: { me: Profile; children: Reac
     { href: '/home', label: 'Home', icon: Home },
     { href: '/explore', label: 'Explore', icon: Compass },
     { href: '/reels', label: 'Reels', icon: Clapperboard },
+    { href: '/live', label: 'Live', icon: Radio },
     { href: '/create', label: 'Create', icon: PlusSquare },
     { href: '/shop', label: 'Shop', icon: ShoppingBag },
     { href: '/messages', label: 'Messages', icon: MessageCircle, badge: unread.m },
@@ -60,7 +61,7 @@ export default function AppShell({ me, children }: { me: Profile; children: Reac
     ...(me.role === 'admin' ? [{ href: '/admin', label: 'Admin', icon: Shield }] : []),
   ]
   const active = (h: string) => path === h || path.startsWith(h + '/')
-  const immersive = path.startsWith('/reels') || path.startsWith('/stories')
+  const immersive = path.startsWith('/reels') || path.startsWith('/stories') || path.startsWith('/live/')
 
   return (
     <MeContext.Provider value={me}>
@@ -117,7 +118,7 @@ export default function AppShell({ me, children }: { me: Profile; children: Reac
 
         {/* Mobile tab bar */}
         <nav className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center justify-around border-t border-line bg-surface/95 backdrop-blur lg:hidden" aria-label="Primary">
-          {[nav[0], nav[1], nav[3], nav[2]].map(n => (
+          {[nav[0], nav[1], nav[4], nav[2]].map(n => (
             <Link key={n.href} href={n.href} aria-label={n.label} className={`grid h-11 w-11 place-items-center rounded-xl ${active(n.href) ? 'text-ink' : 'text-muted'}`}>
               <n.icon size={24} strokeWidth={active(n.href) ? 2.4 : 1.8} />
             </Link>

@@ -1,7 +1,8 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ImagePlus, Link2, Plus, Trash2, X, Clapperboard, CircleDashed, LayoutGrid, CalendarClock, ShoppingBag } from 'lucide-react'
+import { ImagePlus, Link2, Plus, Trash2, X, Clapperboard, CircleDashed, LayoutGrid, CalendarClock, ShoppingBag, Layers, Radio } from 'lucide-react'
 import { sb } from '../../../lib/supabase/client'
 import { useMe } from '../../../lib/useMe'
 import { probeMedia, uploadMedia, type Probed } from '../../../lib/media'
@@ -102,10 +103,12 @@ export default function CreatePage() {
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="font-display text-3xl font-extrabold">Create</h1>
-        <div className="flex gap-1 rounded-full bg-surface2 p-1">
+        <div className="no-scrollbar flex max-w-full gap-1 overflow-x-auto rounded-full bg-surface2 p-1">
           {([['pin', 'Pin / Post', LayoutGrid], ['reel', 'Reel', Clapperboard], ['story', 'Story', CircleDashed]] as const).map(([k, l, I]) => (
             <button key={k} onClick={() => setKind(k)} className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold ${kind === k ? 'bg-surface shadow-card' : 'text-muted'}`}><I size={16} />{l}</button>
           ))}
+          <Link href="/create/collage" className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-muted hover:text-ink"><Layers size={16} />Collage</Link>
+          <Link href="/live/new" className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-muted hover:text-ink"><Radio size={16} />Go live</Link>
         </div>
       </div>
 

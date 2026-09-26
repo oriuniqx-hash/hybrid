@@ -64,3 +64,10 @@ button, input, textarea, select { font: inherit; color: inherit; }
 @keyframes sk { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
 @keyframes story { from { width: 0 } to { width: 100% } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+@keyframes floatUp {
+  0% { transform: translateY(0) scale(.6); opacity: 0; }
+  12% { opacity: 1; transform: translateY(-20px) scale(1.1); }
+  100% { transform: translateY(-260px) scale(.9) translateX(12px); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .animate-\[floatUp_2\.2s_ease-out_forwards\] { animation-duration: .01s; } }

@@ -39,6 +39,7 @@ export type Post = {
   allow_comments: boolean
   is_paid_partnership: boolean
   partner_brand: string | null
+  is_collage?: boolean
   status: string
   audience: string
   publish_at: string

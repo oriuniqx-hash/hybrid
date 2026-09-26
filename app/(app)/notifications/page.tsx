@@ -7,7 +7,7 @@ import { useMe } from '../../../lib/useMe'
 import { Avatar, Empty, Spinner } from '../../../components/ui'
 import { displayName, timeAgo } from '../../../lib/format'
 
-const TEXT: Record<string, string> = { like: 'liked your pin', comment: 'commented:', follow: 'started following you', follow_request: 'requested to follow you', save: 'saved your pin', mention: 'mentioned you:', message: 'sent you a message', report_resolved: 'Your report was reviewed' }
+const TEXT: Record<string, string> = { like: 'liked your pin', comment: 'commented:', follow: 'started following you', follow_request: 'requested to follow you', save: 'saved your pin', mention: 'mentioned you:', message: 'sent you a message', report_resolved: 'Your report was reviewed', live: 'started a live video', remix: 'remixed your collage' }
 
 export default function NotificationsPage() {
   const me = useMe()
@@ -42,7 +42,8 @@ export default function NotificationsPage() {
               <p className="min-w-0 flex-1 text-sm"><Link href={`/u/${n.actor?.username}`} className="font-semibold">{n.actor?.username}</Link> {TEXT[n.type]} {n.body && ['comment', 'mention'].includes(n.type) && <span className="text-muted">{n.body}</span>} <span className="text-xs text-faint">{timeAgo(n.created_at)}</span></p>
               {n.type === 'follow_request' ? (
                 <div className="flex gap-1.5"><button onClick={() => respond(n, true)} className="btn-primary py-1.5">Confirm</button><button onClick={() => respond(n, false)} className="btn-ghost py-1.5">Delete</button></div>
-              ) : n.post && <Link href={n.post.type === 'reel' ? `/reels?id=${n.post.id}` : `/p/${n.post.id}`} className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-surface2">{n.post.type === 'reel' ? <video src={n.post.media_url} muted className="h-full w-full object-cover" /> : <img src={n.post.thumbnail_url || n.post.media_url} alt="" className="h-full w-full object-cover" />}</Link>}
+              ) : n.type === 'live' ? <Link href={`/live/${n.body}`} className="btn-primary py-1.5">Watch</Link>
+              : n.post && <Link href={n.post.type === 'reel' ? `/reels?id=${n.post.id}` : `/p/${n.post.id}`} className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-surface2">{n.post.type === 'reel' ? <video src={n.post.media_url} muted className="h-full w-full object-cover" /> : <img src={n.post.thumbnail_url || n.post.media_url} alt="" className="h-full w-full object-cover" />}</Link>}
             </div>
           ))}
       </div>
